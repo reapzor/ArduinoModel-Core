@@ -24,6 +24,8 @@ public class ArduinoModel {
             }
         });
         firmataClient.sendMessage(new SysexCapabilityQueryMessage());
+
+        //
     }
 
 
