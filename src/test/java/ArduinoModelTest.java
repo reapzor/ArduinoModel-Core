@@ -1,4 +1,6 @@
 import com.bortbort.arduino.FiloFirmata.FirmataConfiguration;
+import com.bortbort.arduino.FiloFirmata.MessageListener;
+import com.bortbort.arduino.FiloFirmata.Messages.AnalogMessage;
 import com.bortbort.arduino.FiloFirmata.Messages.SystemResetMessage;
 import com.bortbort.arduino.FiloFirmata.PinCapability;
 import com.bortbort.arduino.Model.Core.AnalogPin;
@@ -25,6 +27,7 @@ public class ArduinoModelTest {
 
     @After
     public void after() {
+        model.getFirmataClient().removeAllListeners();
         model.stop();
     }
 
@@ -32,7 +35,7 @@ public class ArduinoModelTest {
     public void testAnalogPinAssignment() throws Exception {
         assertTrue(model.getArduinoPins().size() >= 19);
 
-        ArduinoPin arduinoPin = model.getArduinoPins().get(17);
+        ArduinoPin arduinoPin = model.getArduinoPins().get(19);
         assertTrue(arduinoPin.supportsCapability(PinCapability.ANALOG));
 
         arduinoPin.setState(PinCapability.INPUT);
@@ -48,6 +51,23 @@ public class ArduinoModelTest {
         assertNotNull(analogPin);
         analogPin = analogPin.castTo(AnalogPin.class);
         assertNotNull(analogPin);
+
+        Thread.sleep(50);
+
+        analogPin.togglePinEventing(false);
+
+        MessageListener<AnalogMessage> analogNoListener = new MessageListener<AnalogMessage>() {
+            @Override
+            public void messageReceived(AnalogMessage message) {
+                fail();
+            }
+        };
+
+        model.getFirmataClient().addMessageListener(analogNoListener);
+
+        Thread.sleep(100);
+
+        model.getFirmataClient().removeMessageListener(analogNoListener);
 
         arduinoPin.setState(PinCapability.INPUT);
     }

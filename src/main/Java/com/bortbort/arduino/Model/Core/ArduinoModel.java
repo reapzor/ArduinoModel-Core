@@ -2,7 +2,6 @@ package com.bortbort.arduino.Model.Core;
 
 import com.bortbort.arduino.FiloFirmata.Firmata;
 import com.bortbort.arduino.FiloFirmata.FirmataConfiguration;
-import com.bortbort.arduino.FiloFirmata.MessageListener;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexCapabilityMessage;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexCapabilityQueryMessage;
 import com.bortbort.arduino.FiloFirmata.PinCapability;
@@ -36,6 +35,8 @@ public class ArduinoModel {
         if (clientCapabilitiesMessage == null) {
             return false;
         }
+
+        AnalogPinMapper.setPinCapabilities(clientCapabilitiesMessage.getPinCapabilities());
 
         clearPins();
         pinCapabilities = clientCapabilitiesMessage.getPinCapabilities();

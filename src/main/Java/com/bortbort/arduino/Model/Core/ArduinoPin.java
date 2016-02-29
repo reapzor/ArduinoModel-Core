@@ -18,8 +18,8 @@ import java.util.ArrayList;
  * Created by chuck on 2/27/2016.
  */
 public class ArduinoPin {
-    private static final Logger log = LoggerFactory.getLogger(ArduinoPin.class);
-    private Firmata firmataClient;
+    protected static final Logger log = LoggerFactory.getLogger(ArduinoPin.class);
+    protected Firmata firmataClient;
     private Integer pinID;
     private DigitalChannel channelID;
     private ArrayList<PinCapability> pinCapabilities;
@@ -126,11 +126,23 @@ public class ArduinoPin {
     }
 
     public <T extends ArduinoPin> T setState(Class<T> castClass, PinCapability desiredState) {
-        if (setState(desiredState)) {
-            return castTo(castClass);
+        PinCapability prevState = currentState;
+        currentState = desiredState;
+
+        T pinObject = castTo(castClass);
+
+        if (pinObject == null) {
+            currentState = prevState;
+            return null;
         }
 
-        return null;
+        if (!setState(desiredState)) {
+            currentState = prevState;
+            dropListeners();
+            return null;
+        }
+
+        return pinObject;
     }
 
     private Boolean sendStateChangeRequest(PinCapability pinState) {
