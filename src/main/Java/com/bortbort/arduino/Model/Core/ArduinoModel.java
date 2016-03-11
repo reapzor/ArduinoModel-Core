@@ -7,28 +7,52 @@ import com.bortbort.arduino.FiloFirmata.Messages.SysexCapabilityQueryMessage;
 import com.bortbort.arduino.FiloFirmata.PinCapability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by chuck on 2/24/2016.
  */
 public class ArduinoModel {
     private static final Logger log = LoggerFactory.getLogger(ArduinoModel.class);
-    Firmata firmataClient;
+    Firmata firmata;
+    List<PinResource> pinResources;
     ArrayList<ArrayList<PinCapability>> pinCapabilities = null;
-    ArrayList<ArduinoPin> arduinoPins = new ArrayList<>();
-
 
 
     public ArduinoModel(FirmataConfiguration firmataConfiguration) {
-        firmataClient = new Firmata(firmataConfiguration);
+        firmata = new Firmata(firmataConfiguration);
     }
 
 
 
-    public Boolean discoverPins() {
-        SysexCapabilityMessage clientCapabilitiesMessage = firmataClient.sendMessageSynchronous(
+    public Boolean start() {
+        if (firmata.getStarted()) {
+            return true;
+        }
+
+        if (!firmata.start()) {
+            log.error("Unable to start Firmata library.");
+            return false;
+        }
+
+        if (!discoverPins()) {
+            log.error("Failure populating pin details for board.");
+            stop();
+            return false;
+        }
+
+        return true;
+    }
+
+    public void stop() {
+        firmata.stop();
+    }
+
+
+    protected Boolean discoverPins() {
+        SysexCapabilityMessage clientCapabilitiesMessage = firmata.sendMessageSynchronous(
                 SysexCapabilityMessage.class,
                 new SysexCapabilityQueryMessage());
 
@@ -36,50 +60,67 @@ public class ArduinoModel {
             return false;
         }
 
+        deallocateResources();
+
         AnalogPinMapper.setPinCapabilities(clientCapabilitiesMessage.getPinCapabilities());
 
-        clearPins();
         pinCapabilities = clientCapabilitiesMessage.getPinCapabilities();
 
-        Boolean allPinsUpdated = true;
+        PinResource[] pinResourceArray = new PinResource[pinCapabilities.size()];
 
         for (int x = 0; x < pinCapabilities.size(); x++) {
-            ArduinoPin pin = new ArduinoPin(firmataClient, x, pinCapabilities.get(x));
-            if (!pin.updateCurrentState()) {
-                allPinsUpdated = false;
-            }
-            arduinoPins.add(pin);
+            PinResource pin = new PinResource(firmata, x, pinCapabilities.get(x));
+            pinResourceArray[x] = pin;
         }
 
-        return allPinsUpdated;
+        pinResources = Arrays.asList(pinResourceArray);
+
+        return true;
     }
 
-    private void clearPins() {
-        for (ArduinoPin pin : arduinoPins) {
-            pin.dropListeners();
+    public Boolean isResourceAllocated(Integer resourceID) {
+        return pinResources.get(resourceID).isAllocated();
+    }
+
+    public <T extends Pin> T allocateResource(Integer pinID, Class<T> pinClass) {
+        return pinResources.get(pinID).allocate(pinClass);
+    }
+
+    public <T extends MultiStatePin> T allocateResource(Integer pinID, Class<T> pinClass, PinCapability defaultState) {
+        return pinResources.get(pinID).allocate(pinClass, defaultState);
+    }
+
+    public void deallocateResource(Integer pinID) {
+        pinResources.get(pinID).deallocate();
+    }
+
+    protected void deallocateResources() {
+        //pinResources.stream().forEach(PinResource::deallocate);
+        for (PinResource pinResource : pinResources) {
+            pinResource.deallocate();
         }
-        arduinoPins.clear();
     }
 
-    public void stop() {
-        clearPins();
-        pinCapabilities.clear();
 
-        if (firmataClient.getStarted()) {
-            firmataClient.stop();
-        }
+
+    public Boolean isStarted() {
+        return firmata.getStarted();
     }
 
+
+    public List<PinResource> getPinResources() {
+        return pinResources;
+    }
+
+    public PinResource getPinResource(Integer pinID) {
+        return pinResources.get(pinID);
+    }
 
     public ArrayList<ArrayList<PinCapability>> getPinCapabilities() {
         return pinCapabilities;
     }
 
-    public ArrayList<ArduinoPin> getArduinoPins() {
-        return arduinoPins;
-    }
-
-    public Firmata getFirmataClient() {
-        return firmataClient;
+    public Firmata getFirmata() {
+        return firmata;
     }
 }
