@@ -15,9 +15,9 @@ public abstract class MultiStatePin extends Pin {
     private static final Logger log = LoggerFactory.getLogger(MultiStatePin.class);
     protected List<PinCapability> supportedStates = null;
 
-    protected MultiStatePin(Firmata firmata, Integer id, PinCapability defaultState,
+    protected MultiStatePin(Firmata firmata, PinEventManager eventManager, Integer id, PinCapability defaultState,
                   PinCapability... supportedStates) {
-        super(firmata, id, defaultState);
+        super(firmata, eventManager, id, defaultState);
         this.supportedStates = Arrays.asList(supportedStates);
     }
 

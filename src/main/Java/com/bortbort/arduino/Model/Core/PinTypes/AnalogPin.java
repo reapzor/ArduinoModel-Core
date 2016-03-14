@@ -1,10 +1,15 @@
-package com.bortbort.arduino.Model.Core;
+package com.bortbort.arduino.Model.Core.PinTypes;
 
 import com.bortbort.arduino.FiloFirmata.Firmata;
 import com.bortbort.arduino.FiloFirmata.MessageListener;
 import com.bortbort.arduino.FiloFirmata.Messages.AnalogMessage;
 import com.bortbort.arduino.FiloFirmata.Messages.ReportAnalogPinMessage;
 import com.bortbort.arduino.FiloFirmata.PinCapability;
+import com.bortbort.arduino.Model.Core.AnalogPinMapper;
+import com.bortbort.arduino.Model.Core.Pin;
+import com.bortbort.arduino.Model.Core.PinEventManager;
+import com.bortbort.arduino.Model.Core.PinEvents.AnalogValueEvent;
+import com.bortbort.arduino.Model.Core.PinEvents.ReportAnalogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +17,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by chuck on 3/4/2016.
  */
-public class AnalogPin extends Pin {
+public class AnalogPin extends Pin<AnalogPin> {
     private static final Logger log = LoggerFactory.getLogger(AnalogPin.class);
     private Integer currentValueInt;
     private Byte currentValueByte;
@@ -29,19 +34,26 @@ public class AnalogPin extends Pin {
 
             currentValueInt = message.getAnalogValue();
             currentValueByte = message.getAnalogValueByte();
+
+            eventManager.dispatchEvent(new AnalogValueEvent(getThisPin(), currentValueInt, currentValueByte));
         }
     };
 
 
-    protected AnalogPin(Firmata firmata, Integer id) {
-        super(firmata, id, PinCapability.ANALOG);
+    protected AnalogPin(Firmata firmata, PinEventManager eventManager, Integer id) {
+        super(firmata, eventManager, id, PinCapability.ANALOG);
         analogPinID = AnalogPinMapper.getAnalogPinIdentifier(id);
     }
 
 
     public Boolean togglePinEventing(Boolean enable) {
-        return firmata.sendMessage(new ReportAnalogPinMessage(analogPinID, enable));
+        // No guarantee :(
+        if (firmata.sendMessage(new ReportAnalogPinMessage(analogPinID, enable))) {
+            eventManager.dispatchEvent(new ReportAnalogEvent(this, enable));
+        }
+        return false;
     }
+
 
     @Override
     protected Boolean startup() {
@@ -53,9 +65,6 @@ public class AnalogPin extends Pin {
     protected void shutdown() {
         firmata.removeMessageListener(analogPinID, analogListener);
     }
-
-
-
 
 
     public Integer getCurrentValueInt() {

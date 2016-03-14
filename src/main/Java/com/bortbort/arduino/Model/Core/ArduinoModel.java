@@ -19,6 +19,7 @@ public class ArduinoModel {
     Firmata firmata;
     List<PinResource> pinResources;
     ArrayList<ArrayList<PinCapability>> pinCapabilities = null;
+    PinEventManager eventManager = new PinEventManager();
 
 
     public ArduinoModel(FirmataConfiguration firmataConfiguration) {
@@ -60,7 +61,7 @@ public class ArduinoModel {
             return false;
         }
 
-        deallocateResources();
+        deallocatePins();
 
         AnalogPinMapper.setPinCapabilities(clientCapabilitiesMessage.getPinCapabilities());
 
@@ -69,7 +70,7 @@ public class ArduinoModel {
         PinResource[] pinResourceArray = new PinResource[pinCapabilities.size()];
 
         for (int x = 0; x < pinCapabilities.size(); x++) {
-            PinResource pin = new PinResource(firmata, x, pinCapabilities.get(x));
+            PinResource pin = new PinResource(firmata, eventManager, x, pinCapabilities.get(x));
             pinResourceArray[x] = pin;
         }
 
@@ -78,23 +79,23 @@ public class ArduinoModel {
         return true;
     }
 
-    public Boolean isResourceAllocated(Integer resourceID) {
+    public Boolean isPinAllocated(Integer resourceID) {
         return pinResources.get(resourceID).isAllocated();
     }
 
-    public <T extends Pin> T allocateResource(Integer pinID, Class<T> pinClass) {
+    public <T extends Pin> T allocatePin(Integer pinID, Class<T> pinClass) {
         return pinResources.get(pinID).allocate(pinClass);
     }
 
-    public <T extends MultiStatePin> T allocateResource(Integer pinID, Class<T> pinClass, PinCapability defaultState) {
+    public <T extends MultiStatePin> T allocatePin(Integer pinID, Class<T> pinClass, PinCapability defaultState) {
         return pinResources.get(pinID).allocate(pinClass, defaultState);
     }
 
-    public void deallocateResource(Integer pinID) {
+    public void deallocatePin(Integer pinID) {
         pinResources.get(pinID).deallocate();
     }
 
-    protected void deallocateResources() {
+    protected void deallocatePins() {
         //pinResources.stream().forEach(PinResource::deallocate);
         for (PinResource pinResource : pinResources) {
             pinResource.deallocate();

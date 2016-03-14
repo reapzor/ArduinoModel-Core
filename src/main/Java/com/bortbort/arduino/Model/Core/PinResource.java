@@ -14,14 +14,17 @@ import java.util.ArrayList;
 public class PinResource {
     private static final Logger log = LoggerFactory.getLogger(PinResource.class);
     private Firmata firmata;
+    private PinEventManager eventManager;
     private Integer id;
     private ArrayList<PinCapability> capabilities;
     private Class<? extends Pin> allocatedType = null;
     private Pin allocatedInstance = null;
 
 
-    protected PinResource(Firmata firmata, Integer id, ArrayList<PinCapability> capabilities) {
+    protected PinResource(Firmata firmata, PinEventManager eventManager,
+                          Integer id, ArrayList<PinCapability> capabilities) {
         this.firmata = firmata;
+        this.eventManager = eventManager;
         this.id = id;
         this.capabilities = capabilities;
     }
@@ -35,10 +38,12 @@ public class PinResource {
             throw new RuntimeException("Tried to allocate a resource that has not yet been freed.");
         }
 
+
+
         Constructor<T> constructor;
 
         try {
-            constructor = pinClass.getDeclaredConstructor(Firmata.class, Integer.class);
+            constructor = pinClass.getDeclaredConstructor(Firmata.class, PinEventManager.class, Integer.class);
         } catch (NoSuchMethodException e) {
             log.error("Supplied an invalid class {} to bind pin {} to.", pinClass.getSimpleName(), id);
             e.printStackTrace();
@@ -48,13 +53,12 @@ public class PinResource {
         T pinInstance;
 
         try {
-            pinInstance = constructor.newInstance(firmata, id);
+            pinInstance = constructor.newInstance(firmata, eventManager, id);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             log.error("Failed to instantiate pin {} as class {}.", pinClass.getSimpleName(), id);
             e.printStackTrace();
             throw new RuntimeException("Cannot instantiate Pin object. Programmer error.");
         }
-
 
         allocatedType = pinClass;
         allocatedInstance = pinInstance;

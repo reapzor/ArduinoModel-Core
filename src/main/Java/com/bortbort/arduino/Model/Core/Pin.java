@@ -8,15 +8,11 @@ import com.bortbort.arduino.FiloFirmata.PinCapability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 
 /**
  * Created by chuck on 3/4/2016.
  */
-public abstract class Pin<T extends PinListener> {
+public abstract class Pin<T extends Pin> {
     private static final Logger log = LoggerFactory.getLogger(Pin.class);
     protected Firmata firmata;
     protected Integer id;
@@ -24,16 +20,15 @@ public abstract class Pin<T extends PinListener> {
     protected PinCapability state = null;
     protected Integer value = null;
     protected Boolean allocated = null;
-    protected ArrayList<T> pinListeners = new ArrayList<>();
+    protected PinEventManager eventManager;
 
 
-
-    protected Pin(Firmata firmata, Integer id, PinCapability defaultState) {
+    public Pin(Firmata firmata, PinEventManager eventManager, Integer id, PinCapability defaultState) {
         this.firmata = firmata;
+        this.eventManager = eventManager;
         this.id = id;
         this.defaultState = defaultState;
     }
-
 
 
     protected Boolean allocate() {
@@ -52,21 +47,11 @@ public abstract class Pin<T extends PinListener> {
 
     protected abstract void shutdown();
 
-    public void addListener(T pinListener) {
-        if (!pinListeners.contains(pinListener)) {
-            pinListeners.add(pinListener);
-        }
+
+    @SuppressWarnings("unchecked")
+    public T getThisPin() {
+        return (T) this;
     }
-
-    public void removeListener(T pinListener) {
-        pinListeners.remove(pinListener);
-    }
-
-    public <K extends PinEvent> void notify(K event) {
-        pinListeners.stream().forEach(listener -> listener.notify(event));
-    }
-
-
 
     protected Boolean enterDefaultState() {
         if (firmata.sendMessage(new SetPinModeMessage(id, defaultState))) {
@@ -123,4 +108,5 @@ public abstract class Pin<T extends PinListener> {
     public Boolean getAllocated() {
         return allocated;
     }
+
 }
