@@ -70,7 +70,7 @@ public class PinResource {
 
         if (!capabilities.contains(pinInstance.getDefaultState())) {
             log.error("Pin type {} is unsupported for pin id {}. Supported types: {}.",
-                    pinInstance.getClass(), id, capabilities);
+                    pinInstance.getDefaultState(), id, capabilities);
             throw new RuntimeException("Cannot allocate Pin with unsupported type!");
         }
 
