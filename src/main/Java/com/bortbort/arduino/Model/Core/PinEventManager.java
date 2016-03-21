@@ -13,10 +13,10 @@ import java.util.concurrent.Executors;
 public class PinEventManager {
     private static final Logger log = LoggerFactory.getLogger(PinEventManager.class);
     private ExecutorService executor;
-    ArrayList<PinEventListener> genericListeners = new ArrayList<>();
-    ArrayList<PinEventListener> pinEventListeners = new ArrayList<>();
+    private ArrayList<PinEventListener> genericListeners = new ArrayList<>();
+    private ArrayList<PinEventListener> pinEventListeners = new ArrayList<>();
 
-    protected void startup() {
+    protected void start() {
         if (executor != null) {
             log.info("Already connected!");
             return;
@@ -24,7 +24,7 @@ public class PinEventManager {
         executor = Executors.newSingleThreadExecutor();
     }
 
-    protected void shutdown() {
+    protected void stop() {
         if (executor != null) {
             executor.shutdown();
             executor = null;

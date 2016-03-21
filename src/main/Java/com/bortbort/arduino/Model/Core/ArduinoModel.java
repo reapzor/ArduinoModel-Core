@@ -16,10 +16,10 @@ import java.util.List;
  */
 public class ArduinoModel {
     private static final Logger log = LoggerFactory.getLogger(ArduinoModel.class);
-    protected Firmata firmata;
-    protected List<PinResource> pinResources;
-    protected ArrayList<ArrayList<PinCapability>> pinCapabilities = null;
-    public PinEventManager eventManager = new PinEventManager();
+    private Firmata firmata;
+    private List<PinResource> pinResources;
+    private ArrayList<ArrayList<PinCapability>> pinCapabilities = null;
+    private PinEventManager eventManager = new PinEventManager();
 
 
     public ArduinoModel(FirmataConfiguration firmataConfiguration) {
@@ -33,6 +33,8 @@ public class ArduinoModel {
             return true;
         }
 
+        eventManager.start();
+
         if (!firmata.start()) {
             log.error("Unable to start Firmata library.");
             return false;
@@ -44,14 +46,12 @@ public class ArduinoModel {
             return false;
         }
 
-        eventManager.startup();
-
         return true;
     }
 
     public void stop() {
-        eventManager.shutdown();
         firmata.stop();
+        eventManager.stop();
     }
 
 
@@ -120,6 +120,18 @@ public class ArduinoModel {
         pinResources.stream().forEach(PinResource::deallocate);
     }
 
+
+    public void addListener(PinEventListener listener) {
+        eventManager.addListener(listener);
+    }
+
+    public void removeListener(PinEventListener listener) {
+        eventManager.removeListener(listener);
+    }
+
+    public void removeAllListeners() {
+        eventManager.removeAllListeners();
+    }
 
 
     public Boolean isStarted() {

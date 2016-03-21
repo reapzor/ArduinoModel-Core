@@ -8,8 +8,8 @@ import java.util.function.Consumer;
  * Created by chuck on 3/6/2016.
  */
 public abstract class PinEventListener<T extends PinEvent> {
-    Integer pinIdentifier = null;
-    Class<? extends PinEvent> eventType;
+    protected Integer pinIdentifier = null;
+    protected Class<? extends PinEvent> eventType;
 
     @SuppressWarnings("unchecked")
     public PinEventListener() {

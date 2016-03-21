@@ -40,7 +40,7 @@ public class ArduinoModelTest {
 
     @After
     public void after() {
-        arduinoModel.eventManager.removeAllListeners();
+        arduinoModel.removeAllListeners();
         arduinoModel.stop();
         reset();
     }
@@ -59,7 +59,7 @@ public class ArduinoModelTest {
             }
         };
 
-        arduinoModel.eventManager.addListener(pinListener);
+        arduinoModel.addListener(pinListener);
 
         arduinoModel.getFirmata().sendMessage(new ReportAnalogPinMessage(18, true));
         assertTrue(pin.togglePinEventing(true));
@@ -69,7 +69,7 @@ public class ArduinoModelTest {
         arduinoModel.getFirmata().sendMessage(new ReportAnalogPinMessage(18, false));
         assertTrue(pin.togglePinEventing(false));
 
-        arduinoModel.eventManager.removeListener(pinListener);
+        arduinoModel.removeListener(pinListener);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class ArduinoModelTest {
             received();
         });
 
-        arduinoModel.eventManager.addListener(pinListener);
+        arduinoModel.addListener(pinListener);
 
         assertTrue(pin.togglePinEventing(true));
 
@@ -89,7 +89,7 @@ public class ArduinoModelTest {
 
         assertTrue(pin.togglePinEventing(false));
 
-        arduinoModel.eventManager.removeListener(pinListener);
+        arduinoModel.removeListener(pinListener);
     }
 
 }
