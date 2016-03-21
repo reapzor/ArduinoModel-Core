@@ -17,30 +17,28 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by chuck on 3/4/2016.
  */
-public class AnalogPin extends Pin<AnalogPin> {
+public class AnalogPin extends Pin {
     private static final Logger log = LoggerFactory.getLogger(AnalogPin.class);
     private Integer currentValueInt;
     private Byte currentValueByte;
     private Integer analogPinID;
 
-    private MessageListener<AnalogMessage> analogListener = new MessageListener<AnalogMessage>() {
-        @Override
-        public void messageReceived(AnalogMessage message) {
-            if (!message.getChannelInt().equals(analogPinID)) {
-                log.error("Listener hit for pin {} but is really for pin {}!",
-                        analogPinID, message.getChannelInt());
-                throw new RuntimeException("Coding error. Listener firing wrong pin.");
-            }
-
-            currentValueInt = message.getAnalogValue();
-            currentValueByte = message.getAnalogValueByte();
-
-            eventManager.dispatchEvent(new AnalogValueEvent(getThisPin(), currentValueInt, currentValueByte));
+    private MessageListener<AnalogMessage> analogListener = MessageListener.from(message -> {
+        // Remove when stable
+        if (!message.getChannelInt().equals(analogPinID)) {
+            log.error("Listener hit for pin {} but is really for pin {}!",
+                    analogPinID, message.getChannelInt());
+            throw new RuntimeException("Coding error. Listener firing wrong pin.");
         }
-    };
+
+        currentValueInt = message.getAnalogValue();
+        currentValueByte = message.getAnalogValueByte();
+
+        dispatch(new AnalogValueEvent(currentValueInt, currentValueByte));
+    });
 
 
-    protected AnalogPin(Firmata firmata, PinEventManager eventManager, Integer id) {
+    public AnalogPin(Firmata firmata, PinEventManager eventManager, Integer id) {
         super(firmata, eventManager, id, PinCapability.ANALOG);
         analogPinID = AnalogPinMapper.getAnalogPinIdentifier(id);
     }
@@ -49,7 +47,8 @@ public class AnalogPin extends Pin<AnalogPin> {
     public Boolean togglePinEventing(Boolean enable) {
         // No guarantee :(
         if (firmata.sendMessage(new ReportAnalogPinMessage(analogPinID, enable))) {
-            eventManager.dispatchEvent(new ReportAnalogEvent(this, enable));
+            dispatch(new ReportAnalogEvent(enable));
+            return true;
         }
         return false;
     }

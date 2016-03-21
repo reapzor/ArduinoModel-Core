@@ -33,12 +33,10 @@ public class PinResource {
 
     public <T extends Pin> T allocate(Class<T> pinClass) {
         if (isAllocated()) {
-            log.error("Trying to allocate {} to {} but it is has not yet been freed from {}! Release() it first!",
+            log.error("Trying to allocate {} to {} but it has not yet been freed from {}! deallocate() it first!",
                     id, pinClass.getSimpleName(), allocatedType.getSimpleName());
             throw new RuntimeException("Tried to allocate a resource that has not yet been freed.");
         }
-
-
 
         Constructor<T> constructor;
 
@@ -55,7 +53,7 @@ public class PinResource {
         try {
             pinInstance = constructor.newInstance(firmata, eventManager, id);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            log.error("Failed to instantiate pin {} as class {}.", pinClass.getSimpleName(), id);
+            log.error("Failed to instantiate pin {} as class {}.", id, pinClass.getSimpleName());
             e.printStackTrace();
             throw new RuntimeException("Cannot instantiate Pin object. Programmer error.");
         }

@@ -9,8 +9,7 @@ import com.bortbort.arduino.Model.Core.PinTypes.AnalogPin;
 public class ReportAnalogEvent extends PinEvent<AnalogPin> {
     private Boolean reporting;
 
-    public ReportAnalogEvent(AnalogPin pin, Boolean reporting) {
-        super(pin);
+    public ReportAnalogEvent(Boolean reporting) {
         this.reporting = reporting;
     }
 

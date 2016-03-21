@@ -10,8 +10,7 @@ public class AnalogValueEvent extends PinEvent<AnalogPin> {
     private Integer currentValueInt;
     private Byte currentValueByte;
 
-    public AnalogValueEvent(AnalogPin pin, Integer currentValueInt, Byte currentValueByte) {
-        super(pin);
+    public AnalogValueEvent(Integer currentValueInt, Byte currentValueByte) {
         this.currentValueInt = currentValueInt;
         this.currentValueByte = currentValueByte;
     }

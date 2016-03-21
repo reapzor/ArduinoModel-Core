@@ -48,7 +48,7 @@
     <dependency>
       <groupId>com.bortbort.arduino</groupId>
       <artifactId>filo-firmata</artifactId>
-      <version>0.1.8-SNAPSHOT</version>
+      <version>0.1.9</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

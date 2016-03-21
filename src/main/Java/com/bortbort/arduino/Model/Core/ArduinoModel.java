@@ -16,10 +16,10 @@ import java.util.List;
  */
 public class ArduinoModel {
     private static final Logger log = LoggerFactory.getLogger(ArduinoModel.class);
-    Firmata firmata;
-    List<PinResource> pinResources;
-    ArrayList<ArrayList<PinCapability>> pinCapabilities = null;
-    PinEventManager eventManager = new PinEventManager();
+    protected Firmata firmata;
+    protected List<PinResource> pinResources;
+    protected ArrayList<ArrayList<PinCapability>> pinCapabilities = null;
+    public PinEventManager eventManager = new PinEventManager();
 
 
     public ArduinoModel(FirmataConfiguration firmataConfiguration) {
@@ -44,10 +44,13 @@ public class ArduinoModel {
             return false;
         }
 
+        eventManager.startup();
+
         return true;
     }
 
     public void stop() {
+        eventManager.shutdown();
         firmata.stop();
     }
 
@@ -79,6 +82,20 @@ public class ArduinoModel {
         return true;
     }
 
+    public <T extends Pin> T getAllocatedPin(Integer pinID, Class<T> pinClass) {
+        if (!pinResources.get(pinID).isAllocated()) {
+            log.error("Pin {} is unallocated. Cannot cast to {}!", pinID, pinClass);
+            throw new RuntimeException("Attempt to access unallocated pin.");
+        }
+        if (!pinResources.get(pinID).getAllocatedType().equals(pinClass)) {
+            log.error("Pin {} is allocated as {}. Cannot cast to {}!",
+                    pinID, pinResources.get(pinID).getAllocatedType(), pinClass);
+            throw new RuntimeException("Attempt to access pin of wrong allocated type.");
+        }
+
+        return pinClass.cast(pinResources.get(pinID).getAllocatedInstance());
+    }
+
     public Boolean isPinAllocated(Integer resourceID) {
         return pinResources.get(resourceID).isAllocated();
     }
@@ -96,10 +113,11 @@ public class ArduinoModel {
     }
 
     protected void deallocatePins() {
-        //pinResources.stream().forEach(PinResource::deallocate);
-        for (PinResource pinResource : pinResources) {
-            pinResource.deallocate();
+        if (pinResources == null) {
+            return;
         }
+
+        pinResources.stream().forEach(PinResource::deallocate);
     }
 
 

@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by chuck on 3/4/2016.
  */
-public abstract class Pin<T extends Pin> {
+public abstract class Pin {
     private static final Logger log = LoggerFactory.getLogger(Pin.class);
     protected Firmata firmata;
     protected Integer id;
@@ -20,7 +20,7 @@ public abstract class Pin<T extends Pin> {
     protected PinCapability state = null;
     protected Integer value = null;
     protected Boolean allocated = null;
-    protected PinEventManager eventManager;
+    private PinEventManager eventManager;
 
 
     public Pin(Firmata firmata, PinEventManager eventManager, Integer id, PinCapability defaultState) {
@@ -46,12 +46,6 @@ public abstract class Pin<T extends Pin> {
     protected abstract Boolean startup();
 
     protected abstract void shutdown();
-
-
-    @SuppressWarnings("unchecked")
-    public T getThisPin() {
-        return (T) this;
-    }
 
     protected Boolean enterDefaultState() {
         if (firmata.sendMessage(new SetPinModeMessage(id, defaultState))) {
@@ -84,6 +78,18 @@ public abstract class Pin<T extends Pin> {
         return true;
     }
 
+
+    protected <K extends Pin> void dispatch(PinEvent<K> pinEvent) {
+        if (!pinEvent.getPinType().equals(getClass())) {
+            log.error("Unable to dispatch event {} for pin of type {}. This event is expecting a type of {}!",
+                    pinEvent.getClass().getSimpleName(), getClass().getSimpleName(),
+                    pinEvent.getPinType().getSimpleName());
+            throw new RuntimeException("Invalid PinEvent for given pinType!");
+        }
+
+        pinEvent.setPin(pinEvent.getPinType().cast(this));
+        eventManager.dispatchEvent(pinEvent);
+    }
 
 
 
