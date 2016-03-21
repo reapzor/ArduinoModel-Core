@@ -7,6 +7,7 @@ import static java.util.concurrent.TimeUnit.*;
 import static org.junit.Assert.*;
 import com.bortbort.arduino.FiloFirmata.FirmataConfiguration;
 import com.bortbort.arduino.FiloFirmata.Messages.ReportAnalogPinMessage;
+import com.bortbort.arduino.FiloFirmata.Messages.SystemResetMessage;
 import com.bortbort.arduino.Model.Core.ArduinoModel;
 import com.bortbort.arduino.Model.Core.PinEventListener;
 import com.bortbort.arduino.Model.Core.PinEvents.AnalogValueEvent;
@@ -36,6 +37,7 @@ public class ArduinoModelTest {
     public void before() throws Exception {
         arduinoModel = new ArduinoModel(new FirmataConfiguration());
         assertTrue(arduinoModel.start());
+        assertTrue(arduinoModel.getFirmata().sendMessage(new SystemResetMessage()));
     }
 
     @After
