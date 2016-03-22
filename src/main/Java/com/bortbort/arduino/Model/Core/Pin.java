@@ -1,5 +1,6 @@
 package com.bortbort.arduino.Model.Core;
 
+import com.bortbort.arduino.FiloFirmata.DigitalChannel;
 import com.bortbort.arduino.FiloFirmata.DigitalPinValue;
 import com.bortbort.arduino.FiloFirmata.Firmata;
 import com.bortbort.arduino.FiloFirmata.Messages.SetPinModeMessage;
@@ -18,31 +19,33 @@ import org.slf4j.LoggerFactory;
 public abstract class Pin {
     private static final Logger log = LoggerFactory.getLogger(Pin.class);
     protected Firmata firmata;
-    protected Integer id;
+    protected Integer pinIdentifier;
+    protected DigitalChannel digitalChannel;
     protected PinCapability defaultState;
     protected PinCapability state = null;
-    protected DigitalPinValue value = null;
-    protected Integer integerValue = null;
+    protected DigitalPinValue outputValue = null;
+    protected Integer integerOutputValue = null;
     protected Boolean allocated = null;
     private PinEventManager eventManager;
 
 
-    public Pin(Firmata firmata, PinEventManager eventManager, Integer id, PinCapability defaultState) {
+    public Pin(Firmata firmata, PinEventManager eventManager, Integer pinIdentifier, PinCapability defaultState) {
         this.firmata = firmata;
         this.eventManager = eventManager;
-        this.id = id;
+        this.pinIdentifier = pinIdentifier;
         this.defaultState = defaultState;
+        digitalChannel = DigitalChannel.getChannelForPin(pinIdentifier);
     }
 
 
     protected Boolean allocate() {
-        log.info("Allocating pin {} to type {}", id, getClass().getSimpleName());
+        log.info("Allocating pin {} to type {}", pinIdentifier, getClass().getSimpleName());
         allocated = enterDefaultState() && startup();
         return allocated;
     }
 
     protected void deallocate() {
-        log.info("Deallocating pin {} from type {}", id, getClass().getSimpleName());
+        log.info("Deallocating pin {} from type {}", pinIdentifier, getClass().getSimpleName());
         allocated = false;
         shutdown();
     }
@@ -52,44 +55,44 @@ public abstract class Pin {
     protected abstract void shutdown();
 
     protected Boolean enterDefaultState() {
-        if (firmata.sendMessage(new SetPinModeMessage(id, defaultState))) {
+        if (firmata.sendMessage(new SetPinModeMessage(pinIdentifier, defaultState))) {
             return updateState();
         }
 
         log.error("Unable to transmit pin state change request from {} to {} for pin {}",
-                state, defaultState, id);
+                state, defaultState, pinIdentifier);
         return false;
     }
 
     protected Boolean updateState() {
         SysexPinStateMessage message = firmata.sendMessageSynchronous(
                 SysexPinStateMessage.class,
-                new SysexPinStateQueryMessage(id));
+                new SysexPinStateQueryMessage(pinIdentifier));
 
         if (message == null) {
-            log.error("Unable to retrieve current state for pin {}. Pin state may be stale.", id);
+            log.error("Unable to retrieve current state for pin {}. Pin state may be stale.", pinIdentifier);
             return false;
         }
 
-        if (!message.getPinIdentifier().equals(id)) {
+        if (!message.getPinIdentifier().equals(pinIdentifier)) {
             log.error("Pin ID mismatch in synchronized response!");
             throw new RuntimeException("Programming Error. If this is hit, then switch back to ASync Chuck!");
         }
 
         PinCapability previousState = state;
-        Integer previousIntegerValue = integerValue;
-        DigitalPinValue previousValue = value;
+        Integer previousIntegerValue = integerOutputValue;
+        DigitalPinValue previousValue = outputValue;
 
-        integerValue = message.getPinValue();
-        value = message.getDigitalPinValue();
+        integerOutputValue = message.getPinValue();
+        outputValue = message.getDigitalPinValue();
         state = message.getCurrentPinMode();
 
         if (previousState != null && previousState != state) {
             fireEvent(new StateEvent(previousState, state));
         }
 
-        if (previousIntegerValue != null && !previousIntegerValue.equals(integerValue)) {
-            fireEvent(new PullupValueEvent(previousIntegerValue, integerValue, previousValue, value));
+        if (previousIntegerValue != null && !previousIntegerValue.equals(integerOutputValue)) {
+            fireEvent(new PullupValueEvent(previousIntegerValue, integerOutputValue, previousValue, outputValue));
         }
 
         return true;
@@ -112,20 +115,24 @@ public abstract class Pin {
 
 
 
-    public Integer getId() {
-        return id;
+    public Integer getPinIdentifier() {
+        return pinIdentifier;
+    }
+
+    public DigitalChannel getDigitalChannel() {
+        return digitalChannel;
+    }
+
+    public DigitalPinValue getOutputValue() {
+        return outputValue;
+    }
+
+    public Integer getIntegerOutputValue() {
+        return integerOutputValue;
     }
 
     public PinCapability getState() {
         return state;
-    }
-
-    public DigitalPinValue getOutputValue() {
-        return value;
-    }
-
-    public Integer getIntegerValue() {
-        return integerValue;
     }
 
     protected PinCapability getDefaultState() {

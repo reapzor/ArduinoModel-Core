@@ -38,9 +38,9 @@ public class AnalogPin extends Pin {
     });
 
 
-    public AnalogPin(Firmata firmata, PinEventManager eventManager, Integer id) {
-        super(firmata, eventManager, id, PinCapability.ANALOG);
-        analogPinID = AnalogPinMapper.getAnalogPinIdentifier(id);
+    public AnalogPin(Firmata firmata, PinEventManager eventManager, Integer pinIdentifier) {
+        super(firmata, eventManager, pinIdentifier, PinCapability.ANALOG);
+        analogPinID = AnalogPinMapper.getAnalogPinIdentifier(pinIdentifier);
     }
 
 

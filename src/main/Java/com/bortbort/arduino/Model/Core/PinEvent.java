@@ -23,7 +23,7 @@ public abstract class PinEvent<T extends Pin> {
 
     protected void setPin(T pin) {
         this.pin = pin;
-        pinIdentifier = pin.getId();
+        pinIdentifier = pin.getPinIdentifier();
     }
 
     protected Class<T> getPinType() {

@@ -39,7 +39,7 @@ public class AnalogPinMapper {
         return digitalPinIdentifier - firstAnalogPinIdentifier;
     }
 
-    public static void setPinCapabilities(ArrayList<ArrayList<PinCapability>> pinCapabilities) {
+    static void setPinCapabilities(ArrayList<ArrayList<PinCapability>> pinCapabilities) {
         AnalogPinMapper.pinCapabilities = pinCapabilities;
     }
 }

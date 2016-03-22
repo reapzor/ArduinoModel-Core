@@ -24,23 +24,23 @@ public abstract class MultiStatePin extends Pin {
     public Boolean enterState(PinCapability desiredState) {
         if (!supportedStates.contains(desiredState)) {
             log.error("Told pin {} to go into unsupported state {}!",
-                    getId(), desiredState);
+                    getPinIdentifier(), desiredState);
             return false;
         }
 
-        if (firmata.sendMessage(new SetPinModeMessage(id, desiredState))) {
+        if (firmata.sendMessage(new SetPinModeMessage(pinIdentifier, desiredState))) {
             return updateState();
         }
 
         log.error("Unable to transmit pin state change request from {} to {} for pin {}",
-                state, desiredState, id);
+                state, desiredState, pinIdentifier);
         return false;
     }
 
     protected void setDefaultState(PinCapability defaultState) {
         if (!supportsState(defaultState)) {
             log.error("The requested resource {} on pin {} does not support state {}",
-                    getClass().getSimpleName(), id, defaultState);
+                    getClass().getSimpleName(), pinIdentifier, defaultState);
             throw new RuntimeException("Tried to allocate a resource to an unsupported state.");
         }
 

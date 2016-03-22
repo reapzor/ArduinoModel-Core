@@ -12,10 +12,9 @@ import com.bortbort.arduino.Model.Core.PinEventManager;
  */
 public class DigitalOutputPin extends Pin {
     //private static final Logger log = LoggerFactory.getLogger(DigitalOutputPin.class);
-    DigitalPinValue outputValue = null;
 
-    public DigitalOutputPin(Firmata firmata, PinEventManager eventManager, Integer id) {
-        super(firmata, eventManager, id, PinCapability.OUTPUT);
+    public DigitalOutputPin(Firmata firmata, PinEventManager eventManager, Integer pinIdentifier) {
+        super(firmata, eventManager, pinIdentifier, PinCapability.OUTPUT);
     }
 
     public Boolean write (Byte pinValue) {
@@ -27,16 +26,16 @@ public class DigitalOutputPin extends Pin {
     }
 
     public Boolean write(DigitalPinValue pinValue) {
-        if (firmata.sendMessage(new SetDigitalPinValueMessage(id, pinValue))) {
+        if (firmata.sendMessage(new SetDigitalPinValueMessage(pinIdentifier, pinValue))) {
             outputValue = pinValue;
+            //fixme
+            integerOutputValue = (int) pinValue.getByteValue();
             return true;
         }
         return false;
     }
 
-    public DigitalPinValue getOutputValue() {
-        return outputValue;
-    }
+
 
     @Override
     protected Boolean startup() {

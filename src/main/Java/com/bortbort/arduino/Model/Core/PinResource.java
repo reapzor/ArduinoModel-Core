@@ -15,17 +15,17 @@ public class PinResource {
     private static final Logger log = LoggerFactory.getLogger(PinResource.class);
     private Firmata firmata;
     private PinEventManager eventManager;
-    private Integer id;
+    private Integer pinIdentifier;
     private ArrayList<PinCapability> capabilities;
     private Class<? extends Pin> allocatedType = null;
     private Pin allocatedInstance = null;
 
 
     protected PinResource(Firmata firmata, PinEventManager eventManager,
-                          Integer id, ArrayList<PinCapability> capabilities) {
+                          Integer pinIdentifier, ArrayList<PinCapability> capabilities) {
         this.firmata = firmata;
         this.eventManager = eventManager;
-        this.id = id;
+        this.pinIdentifier = pinIdentifier;
         this.capabilities = capabilities;
     }
 
@@ -34,7 +34,7 @@ public class PinResource {
     public <T extends Pin> T allocate(Class<T> pinClass) {
         if (isAllocated()) {
             log.error("Trying to allocate {} to {} but it has not yet been freed from {}! deallocate() it first!",
-                    id, pinClass.getSimpleName(), allocatedType.getSimpleName());
+                    pinIdentifier, pinClass.getSimpleName(), allocatedType.getSimpleName());
             throw new RuntimeException("Tried to allocate a resource that has not yet been freed.");
         }
 
@@ -43,7 +43,7 @@ public class PinResource {
         try {
             constructor = pinClass.getDeclaredConstructor(Firmata.class, PinEventManager.class, Integer.class);
         } catch (NoSuchMethodException e) {
-            log.error("Supplied an invalid class {} to bind pin {} to.", pinClass.getSimpleName(), id);
+            log.error("Supplied an invalid class {} to bind pin {} to.", pinClass.getSimpleName(), pinIdentifier);
             e.printStackTrace();
             throw new RuntimeException("Cannot find constructor for Pin class. Programmer error.");
         }
@@ -51,9 +51,9 @@ public class PinResource {
         T pinInstance;
 
         try {
-            pinInstance = constructor.newInstance(firmata, eventManager, id);
+            pinInstance = constructor.newInstance(firmata, eventManager, pinIdentifier);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            log.error("Failed to instantiate pin {} as class {}.", id, pinClass.getSimpleName());
+            log.error("Failed to instantiate pin {} as class {}.", pinIdentifier, pinClass.getSimpleName());
             e.printStackTrace();
             throw new RuntimeException("Cannot instantiate Pin object. Programmer error.");
         }
@@ -63,14 +63,14 @@ public class PinResource {
                     .filter(capability -> capabilities.contains(capability))
                     .limit(1).count();
             if (aCapabilityMatch != 1) {
-                log.error("Pin types {} are unsupported for pin id {}. Supported types: {}.",
-                        ((MultiStatePin) pinInstance).getSupportedStates(), id, capabilities);
+                log.error("Pin types {} are unsupported for pin pinIdentifier {}. Supported types: {}.",
+                        ((MultiStatePin) pinInstance).getSupportedStates(), pinIdentifier, capabilities);
                 throw new RuntimeException("Cannot allocate MultiStatePin with unsupported types!");
             }
         }
         else if (!capabilities.contains(pinInstance.getDefaultState())) {
-            log.error("Pin type {} is unsupported for pin id {}. Supported types: {}.",
-                    pinInstance.getDefaultState(), id, capabilities);
+            log.error("Pin type {} is unsupported for pin pinIdentifier {}. Supported types: {}.",
+                    pinInstance.getDefaultState(), pinIdentifier, capabilities);
             throw new RuntimeException("Cannot allocate Pin with unsupported type!");
         }
 
@@ -78,7 +78,7 @@ public class PinResource {
         allocatedInstance = pinInstance;
 
         if (!allocatedInstance.allocate()) {
-            log.error("Failed to allocate pin {} as {}", id, allocatedType.getSimpleName());
+            log.error("Failed to allocate pin {} as {}", pinIdentifier, allocatedType.getSimpleName());
             deallocate();
             return null;
         }
@@ -129,8 +129,8 @@ public class PinResource {
         return allocatedInstance != null;
     }
 
-    public Integer getId() {
-        return id;
+    public Integer getPinIdentifier() {
+        return pinIdentifier;
     }
 
     public ArrayList<PinCapability> getCapabilities() {
