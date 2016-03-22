@@ -55,7 +55,7 @@ public class PinEventManager {
     }
 
     @SuppressWarnings("unchecked")
-    public void dispatchEvent(PinEvent pinEvent) {
+    public void fireEvent(PinEvent pinEvent) {
         if (executor == null) {
             log.warn("Dispatcher is not running!");
             return;

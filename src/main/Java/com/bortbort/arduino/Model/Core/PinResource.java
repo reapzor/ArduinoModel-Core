@@ -58,7 +58,7 @@ public class PinResource {
             throw new RuntimeException("Cannot instantiate Pin object. Programmer error.");
         }
 
-        if (pinInstance instanceof  MultiStatePin) {
+        if (pinInstance instanceof MultiStatePin) {
             long aCapabilityMatch = ((MultiStatePin) pinInstance).getSupportedStates().stream()
                     .filter(capability -> capabilities.contains(capability))
                     .limit(1).count();
@@ -88,9 +88,7 @@ public class PinResource {
 
     protected <T extends MultiStatePin> T allocate(Class<T> pinClass, PinCapability defaultState) {
         T pinInstance = allocate(pinClass);
-
         pinInstance.setDefaultState(defaultState);
-
         return pinInstance;
     }
 

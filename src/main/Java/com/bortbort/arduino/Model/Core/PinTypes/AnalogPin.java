@@ -34,7 +34,7 @@ public class AnalogPin extends Pin {
         currentValueInt = message.getAnalogValue();
         currentValueByte = message.getAnalogValueByte();
 
-        dispatch(new AnalogValueEvent(currentValueInt, currentValueByte));
+        fireEvent(new AnalogValueEvent(currentValueInt, currentValueByte));
     });
 
 
@@ -47,7 +47,7 @@ public class AnalogPin extends Pin {
     public Boolean togglePinEventing(Boolean enable) {
         // No guarantee :(
         if (firmata.sendMessage(new ReportAnalogPinMessage(analogPinID, enable))) {
-            dispatch(new ReportAnalogEvent(enable));
+            fireEvent(new ReportAnalogEvent(enable));
             return true;
         }
         return false;

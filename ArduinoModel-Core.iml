@@ -25,6 +25,6 @@
     <orderEntry type="library" name="Gradle: net.jodah:typetools:0.4.4" level="project" />
     <orderEntry type="library" name="Gradle: net.java.dev.jna:jna:4.0.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.4" level="project" />
-    <orderEntry type="library" name="Gradle: com.bortbort.arduino:filo-firmata:0.1.9" level="project" />
+    <orderEntry type="library" name="Gradle: com.bortbort.arduino:filo-firmata:0.1.10-SNAPSHOT" level="project" />
   </component>
 </module>

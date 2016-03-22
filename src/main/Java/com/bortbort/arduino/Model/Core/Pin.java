@@ -1,10 +1,13 @@
 package com.bortbort.arduino.Model.Core;
 
+import com.bortbort.arduino.FiloFirmata.DigitalPinValue;
 import com.bortbort.arduino.FiloFirmata.Firmata;
 import com.bortbort.arduino.FiloFirmata.Messages.SetPinModeMessage;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexPinStateMessage;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexPinStateQueryMessage;
 import com.bortbort.arduino.FiloFirmata.PinCapability;
+import com.bortbort.arduino.Model.Core.PinEvents.PullupValueEvent;
+import com.bortbort.arduino.Model.Core.PinEvents.StateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +21,8 @@ public abstract class Pin {
     protected Integer id;
     protected PinCapability defaultState;
     protected PinCapability state = null;
-    protected Integer value = null;
+    protected DigitalPinValue value = null;
+    protected Integer integerValue = null;
     protected Boolean allocated = null;
     private PinEventManager eventManager;
 
@@ -72,23 +76,36 @@ public abstract class Pin {
             throw new RuntimeException("Programming Error. If this is hit, then switch back to ASync Chuck!");
         }
 
-        value = message.getPinValue();
+        PinCapability previousState = state;
+        Integer previousIntegerValue = integerValue;
+        DigitalPinValue previousValue = value;
+
+        integerValue = message.getPinValue();
+        value = message.getDigitalPinValue();
         state = message.getCurrentPinMode();
+
+        if (previousState != null && previousState != state) {
+            fireEvent(new StateEvent(previousState, state));
+        }
+
+        if (previousIntegerValue != null && !previousIntegerValue.equals(integerValue)) {
+            fireEvent(new PullupValueEvent(previousIntegerValue, integerValue, previousValue, value));
+        }
 
         return true;
     }
 
 
-    protected <K extends Pin> void dispatch(PinEvent<K> pinEvent) {
+    protected <K extends Pin> void fireEvent(PinEvent<K> pinEvent) {
         if (!pinEvent.getPinType().equals(getClass())) {
-            log.error("Unable to dispatch event {} for pin of type {}. This event is expecting a type of {}!",
+            log.error("Unable to fireEvent event {} for pin of type {}. This event is expecting a type of {}!",
                     pinEvent.getClass().getSimpleName(), getClass().getSimpleName(),
                     pinEvent.getPinType().getSimpleName());
             throw new RuntimeException("Invalid PinEvent for given pinType!");
         }
 
         pinEvent.setPin(pinEvent.getPinType().cast(this));
-        eventManager.dispatchEvent(pinEvent);
+        eventManager.fireEvent(pinEvent);
     }
 
 
@@ -103,8 +120,12 @@ public abstract class Pin {
         return state;
     }
 
-    public Integer getValue() {
+    public DigitalPinValue getOutputValue() {
         return value;
+    }
+
+    public Integer getIntegerValue() {
+        return integerValue;
     }
 
     protected PinCapability getDefaultState() {

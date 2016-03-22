@@ -27,7 +27,6 @@ public class ArduinoModel {
     }
 
 
-
     public Boolean start() {
         if (firmata.getStarted()) {
             return true;

@@ -16,7 +16,7 @@ public abstract class MultiStatePin extends Pin {
     protected List<PinCapability> supportedStates = null;
 
     protected MultiStatePin(Firmata firmata, PinEventManager eventManager, Integer id, PinCapability defaultState,
-                  PinCapability... supportedStates) {
+                            PinCapability... supportedStates) {
         super(firmata, eventManager, id, defaultState);
         this.supportedStates = Arrays.asList(supportedStates);
     }
