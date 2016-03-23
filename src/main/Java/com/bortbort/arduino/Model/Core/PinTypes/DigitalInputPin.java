@@ -12,10 +12,12 @@ import org.slf4j.LoggerFactory;
  */
 public class DigitalInputPin extends MultiStatePin {
     private static final Logger log = LoggerFactory.getLogger(DigitalInputPin.class);
+    private Integer inputIntegerValue;
     private DigitalPinValue inputValue;
 
     MessageListener<DigitalPortMessage> digitalPortListener = MessageListener.from(message -> {
-        //message.getPinMappedValues().
+        inputIntegerValue = message.getPinIntegerValues().get(pinIdentifier);
+        inputValue = DigitalPinValue.valueFromInt(inputIntegerValue);
     });
 
     public DigitalInputPin(Firmata firmata, PinEventManager eventManager, Integer pinIdentifier) {
@@ -31,16 +33,22 @@ public class DigitalInputPin extends MultiStatePin {
     }
 
 
+    public Integer getInputIntegerValue() {
+        return inputIntegerValue;
+    }
 
-
+    public DigitalPinValue getInputValue() {
+        return inputValue;
+    }
 
     @Override
     protected Boolean startup() {
-        return null;
+        firmata.addMessageListener(digitalPortListener);
+        return true;
     }
 
     @Override
     protected void shutdown() {
-
+        firmata.removeMessageListener(digitalPortListener);
     }
 }
