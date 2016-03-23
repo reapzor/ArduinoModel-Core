@@ -28,8 +28,7 @@ public class DigitalOutputPin extends Pin {
     public Boolean write(DigitalPinValue pinValue) {
         if (firmata.sendMessage(new SetDigitalPinValueMessage(pinIdentifier, pinValue))) {
             outputValue = pinValue;
-            //fixme
-            integerOutputValue = (int) pinValue.getByteValue();
+            integerOutputValue = pinValue.getIntValue();
             return true;
         }
         return false;
