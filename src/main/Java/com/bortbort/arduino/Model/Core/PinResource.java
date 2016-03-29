@@ -59,10 +59,9 @@ public class PinResource {
         }
 
         if (pinInstance instanceof MultiStatePin) {
-            long aCapabilityMatch = ((MultiStatePin) pinInstance).getSupportedStates().stream()
-                    .filter(capability -> capabilities.contains(capability))
-                    .limit(1).count();
-            if (aCapabilityMatch != 1) {
+            boolean aCapabilityMatch = ((MultiStatePin) pinInstance).getSupportedStates().stream()
+                    .anyMatch(capability -> capabilities.contains(capability));
+            if (!aCapabilityMatch) {
                 log.error("Pin types {} are unsupported for pin pinIdentifier {}. Supported types: {}.",
                         ((MultiStatePin) pinInstance).getSupportedStates(), pinIdentifier, capabilities);
                 throw new RuntimeException("Cannot allocate MultiStatePin with unsupported types!");

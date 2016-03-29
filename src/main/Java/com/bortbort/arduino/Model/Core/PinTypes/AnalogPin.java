@@ -19,9 +19,10 @@ import org.slf4j.LoggerFactory;
  */
 public class AnalogPin extends Pin {
     private static final Logger log = LoggerFactory.getLogger(AnalogPin.class);
-    private Integer currentValueInt;
-    private Byte currentValueByte;
     private Integer analogPinID;
+    private Integer currentValueInt = null;
+    private Byte currentValueByte = null;
+    private Boolean pinEventing = false;
 
     private MessageListener<AnalogMessage> analogListener = MessageListener.from(message -> {
         // Remove when stable
@@ -31,10 +32,12 @@ public class AnalogPin extends Pin {
             throw new RuntimeException("Coding error. Listener firing wrong pin.");
         }
 
+        Integer previousValueInt = currentValueInt;
+        Byte previousValueByte = currentValueByte;
         currentValueInt = message.getAnalogValue();
         currentValueByte = message.getAnalogValueByte();
 
-        fireEvent(new AnalogValueEvent(currentValueInt, currentValueByte));
+        fireEvent(new AnalogValueEvent(previousValueInt, previousValueByte, currentValueInt, currentValueByte));
     });
 
 
@@ -44,13 +47,15 @@ public class AnalogPin extends Pin {
     }
 
 
-    public Boolean togglePinEventing(Boolean enable) {
-        // No guarantee :(
-        if (firmata.sendMessage(new ReportAnalogPinMessage(analogPinID, enable))) {
-            fireEvent(new ReportAnalogEvent(enable));
-            return true;
+    public void togglePinEventing(Boolean enable) {
+        if (pinEventing == enable) {
+            return;
         }
-        return false;
+
+        pinEventing = enable;
+        fireEvent(new ReportAnalogEvent(enable));
+
+        firmata.sendMessage(new ReportAnalogPinMessage(analogPinID, enable));
     }
 
 
@@ -62,6 +67,7 @@ public class AnalogPin extends Pin {
 
     @Override
     protected void shutdown() {
+        togglePinEventing(false);
         firmata.removeMessageListener(analogPinID, analogListener);
     }
 

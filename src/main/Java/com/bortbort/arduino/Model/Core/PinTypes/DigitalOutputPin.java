@@ -6,18 +6,21 @@ import com.bortbort.arduino.FiloFirmata.Messages.SetDigitalPinValueMessage;
 import com.bortbort.arduino.FiloFirmata.PinCapability;
 import com.bortbort.arduino.Model.Core.Pin;
 import com.bortbort.arduino.Model.Core.PinEventManager;
+import com.bortbort.arduino.Model.Core.PinEvents.DigitalWriteEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by chuck on 3/21/2016.
  */
 public class DigitalOutputPin extends Pin {
-    //private static final Logger log = LoggerFactory.getLogger(DigitalOutputPin.class);
+    private static final Logger log = LoggerFactory.getLogger(DigitalOutputPin.class);
 
     public DigitalOutputPin(Firmata firmata, PinEventManager eventManager, Integer pinIdentifier) {
         super(firmata, eventManager, pinIdentifier, PinCapability.OUTPUT);
     }
 
-    public Boolean write (Byte pinValue) {
+    public Boolean write(Byte pinValue) {
         return write(DigitalPinValue.valueFromByte(pinValue));
     }
 
@@ -27,8 +30,12 @@ public class DigitalOutputPin extends Pin {
 
     public Boolean write(DigitalPinValue pinValue) {
         if (firmata.sendMessage(new SetDigitalPinValueMessage(pinIdentifier, pinValue))) {
+            DigitalPinValue previousOutputValue = outputValue;
+            Integer previousIntegerOutputValue = outputIntegerValue;
             outputValue = pinValue;
-            integerOutputValue = pinValue.getIntValue();
+            outputIntegerValue = pinValue.getIntValue();
+            fireEvent(new DigitalWriteEvent(previousIntegerOutputValue, previousOutputValue,
+                    outputIntegerValue, outputValue));
             return true;
         }
         return false;

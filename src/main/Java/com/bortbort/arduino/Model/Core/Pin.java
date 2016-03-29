@@ -24,7 +24,7 @@ public abstract class Pin {
     protected PinCapability defaultState;
     protected PinCapability state = null;
     protected DigitalPinValue outputValue = null;
-    protected Integer integerOutputValue = null;
+    protected Integer outputIntegerValue = null;
     protected Boolean allocated = null;
     private PinEventManager eventManager;
 
@@ -80,10 +80,10 @@ public abstract class Pin {
         }
 
         PinCapability previousState = state;
-        Integer previousIntegerValue = integerOutputValue;
+        Integer previousIntegerValue = outputIntegerValue;
         DigitalPinValue previousValue = outputValue;
 
-        integerOutputValue = message.getPinValue();
+        outputIntegerValue = message.getPinValue();
         outputValue = message.getDigitalPinValue();
         state = message.getCurrentPinMode();
 
@@ -91,8 +91,8 @@ public abstract class Pin {
             fireEvent(new StateEvent(previousState, state));
         }
 
-        if (previousIntegerValue != null && !previousIntegerValue.equals(integerOutputValue)) {
-            fireEvent(new PullupValueEvent(previousIntegerValue, integerOutputValue, previousValue, outputValue));
+        if (previousIntegerValue != null && !previousIntegerValue.equals(outputIntegerValue)) {
+            fireEvent(new PullupValueEvent(previousIntegerValue, outputIntegerValue, previousValue, outputValue));
         }
 
         return true;
@@ -100,7 +100,7 @@ public abstract class Pin {
 
 
     protected <K extends Pin> void fireEvent(PinEvent<K> pinEvent) {
-        if (!pinEvent.getPinType().equals(getClass())) {
+        if (!pinEvent.getPinType().equals(getClass()) && !pinEvent.getPinType().equals(Pin.class)) {
             log.error("Unable to fireEvent event {} for pin of type {}. This event is expecting a type of {}!",
                     pinEvent.getClass().getSimpleName(), getClass().getSimpleName(),
                     pinEvent.getPinType().getSimpleName());
@@ -127,8 +127,8 @@ public abstract class Pin {
         return outputValue;
     }
 
-    public Integer getIntegerOutputValue() {
-        return integerOutputValue;
+    public Integer getOutputIntegerValue() {
+        return outputIntegerValue;
     }
 
     public PinCapability getState() {

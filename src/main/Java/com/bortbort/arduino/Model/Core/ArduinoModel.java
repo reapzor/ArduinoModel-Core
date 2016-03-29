@@ -5,6 +5,7 @@ import com.bortbort.arduino.FiloFirmata.FirmataConfiguration;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexCapabilityMessage;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexCapabilityQueryMessage;
 import com.bortbort.arduino.FiloFirmata.PinCapability;
+import com.bortbort.arduino.Model.Core.PinTypes.AnalogPin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
@@ -106,6 +107,10 @@ public class ArduinoModel {
     public <T extends MultiStatePin> T allocatePin(Integer pinID, Class<T> pinClass, PinCapability defaultState) {
         return pinResources.get(pinID).allocate(pinClass, defaultState);
     }
+
+//    public AnalogPin allocateAnalogPin(Integer analogPinIdentifier) {
+//        return pinResources.get(0).allocate(AnalogPin.class);
+//    }
 
     public void deallocatePin(Integer pinID) {
         pinResources.get(pinID).deallocate();
