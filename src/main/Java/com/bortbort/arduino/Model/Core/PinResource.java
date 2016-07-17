@@ -15,25 +15,25 @@ public class PinResource {
     private static final Logger log = LoggerFactory.getLogger(PinResource.class);
     private Firmata firmata;
     private PinEventManager eventManager;
+    private PinResourceManager pinResourceManager;
     private Integer pinIdentifier;
     private ArrayList<PinCapability> capabilities;
     private Class<? extends Pin> allocatedType = null;
     private Pin allocatedInstance = null;
 
 
-    protected PinResource(Firmata firmata, PinEventManager eventManager,
-                          Integer pinIdentifier, ArrayList<PinCapability> capabilities) {
+    public PinResource(Firmata firmata, PinEventManager eventManager, PinResourceManager pinResourceManager,
+                       Integer pinIdentifier, ArrayList<PinCapability> capabilities) {
         this.firmata = firmata;
         this.eventManager = eventManager;
+        this.pinResourceManager = pinResourceManager;
         this.pinIdentifier = pinIdentifier;
         this.capabilities = capabilities;
     }
 
-
-
     public <T extends Pin> T allocate(Class<T> pinClass) {
         if (isAllocated()) {
-            log.error("Trying to allocate {} to {} but it has not yet been freed from {}! deallocate() it first!",
+            log.error("Trying to allocate {} to {} but it has not yet been freed from {}! deallocate it first!",
                     pinIdentifier, pinClass.getSimpleName(), allocatedType.getSimpleName());
             throw new RuntimeException("Tried to allocate a resource that has not yet been freed.");
         }
@@ -41,7 +41,8 @@ public class PinResource {
         Constructor<T> constructor;
 
         try {
-            constructor = pinClass.getDeclaredConstructor(Firmata.class, PinEventManager.class, Integer.class);
+            constructor = pinClass.getDeclaredConstructor(Firmata.class, PinEventManager.class,
+                    PinResource.class, Integer.class);
         } catch (NoSuchMethodException e) {
             log.error("Supplied an invalid class {} to bind pin {} to.", pinClass.getSimpleName(), pinIdentifier);
             e.printStackTrace();
@@ -51,7 +52,7 @@ public class PinResource {
         T pinInstance;
 
         try {
-            pinInstance = constructor.newInstance(firmata, eventManager, pinIdentifier);
+            pinInstance = constructor.newInstance(firmata, eventManager, this, pinIdentifier);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             log.error("Failed to instantiate pin {} as class {}.", pinIdentifier, pinClass.getSimpleName());
             e.printStackTrace();
@@ -76,7 +77,7 @@ public class PinResource {
         allocatedType = pinClass;
         allocatedInstance = pinInstance;
 
-        if (!allocatedInstance.allocate()) {
+        if (!allocatedInstance._startup()) {
             log.error("Failed to allocate pin {} as {}", pinIdentifier, allocatedType.getSimpleName());
             deallocate();
             return null;
@@ -93,7 +94,7 @@ public class PinResource {
 
     public void deallocate() {
         if (allocatedInstance != null && !allocatedInstance.getAllocated()) {
-            allocatedInstance.deallocate();
+            allocatedInstance._shutdown();
         }
         allocatedInstance = null;
         allocatedType = null;

@@ -15,9 +15,9 @@ public abstract class MultiStatePin extends Pin {
     private static final Logger log = LoggerFactory.getLogger(MultiStatePin.class);
     protected List<PinCapability> supportedStates = null;
 
-    protected MultiStatePin(Firmata firmata, PinEventManager eventManager, Integer id, PinCapability defaultState,
-                            PinCapability... supportedStates) {
-        super(firmata, eventManager, id, defaultState);
+    protected MultiStatePin(Firmata firmata, PinEventManager eventManager, PinResource pinResource, Integer id,
+                            PinCapability defaultState, PinCapability... supportedStates) {
+        super(firmata, eventManager, pinResource, id, defaultState);
         this.supportedStates = Arrays.asList(supportedStates);
     }
 
@@ -41,7 +41,7 @@ public abstract class MultiStatePin extends Pin {
         if (!supportsState(defaultState)) {
             log.error("The requested resource {} on pin {} does not support state {}",
                     getClass().getSimpleName(), pinIdentifier, defaultState);
-            throw new RuntimeException("Tried to allocate a resource to an unsupported state.");
+            throw new RuntimeException("Tried to startup a resource to an unsupported state.");
         }
 
         this.defaultState = defaultState;

@@ -10,6 +10,7 @@ import com.bortbort.arduino.Model.Core.Pin;
 import com.bortbort.arduino.Model.Core.PinEventManager;
 import com.bortbort.arduino.Model.Core.PinEvents.AnalogValueEvent;
 import com.bortbort.arduino.Model.Core.PinEvents.ReportAnalogEvent;
+import com.bortbort.arduino.Model.Core.PinResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +42,8 @@ public class AnalogPin extends Pin {
     });
 
 
-    public AnalogPin(Firmata firmata, PinEventManager eventManager, Integer pinIdentifier) {
-        super(firmata, eventManager, pinIdentifier, PinCapability.ANALOG);
+    public AnalogPin(Firmata firmata, PinEventManager eventManager, PinResource pinResource, Integer pinIdentifier) {
+        super(firmata, eventManager, pinResource, pinIdentifier, PinCapability.ANALOG);
         analogPinID = AnalogPinMapper.getAnalogPinIdentifier(pinIdentifier);
     }
 

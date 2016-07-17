@@ -20,6 +20,7 @@ public abstract class Pin {
     private static final Logger log = LoggerFactory.getLogger(Pin.class);
     protected Firmata firmata;
     protected Integer pinIdentifier;
+    private PinResource pinResource;
     protected DigitalChannel digitalChannel;
     protected PinCapability defaultState;
     protected PinCapability state = null;
@@ -29,22 +30,24 @@ public abstract class Pin {
     private PinEventManager eventManager;
 
 
-    public Pin(Firmata firmata, PinEventManager eventManager, Integer pinIdentifier, PinCapability defaultState) {
+    public Pin(Firmata firmata, PinEventManager eventManager, PinResource pinResource,
+               Integer pinIdentifier, PinCapability defaultState) {
         this.firmata = firmata;
         this.eventManager = eventManager;
+        this.pinResource = pinResource;
         this.pinIdentifier = pinIdentifier;
         this.defaultState = defaultState;
         digitalChannel = DigitalChannel.getChannelForPin(pinIdentifier);
     }
 
 
-    protected Boolean allocate() {
+    protected Boolean _startup() {
         log.info("Allocating pin {} to type {}", pinIdentifier, getClass().getSimpleName());
         allocated = enterDefaultState() && startup();
         return allocated;
     }
 
-    protected void deallocate() {
+    protected void _shutdown() {
         log.info("Deallocating pin {} from type {}", pinIdentifier, getClass().getSimpleName());
         allocated = false;
         shutdown();
@@ -113,7 +116,9 @@ public abstract class Pin {
 
 
 
-
+    public void free() {
+        pinResource.deallocate();
+    }
 
     public Integer getPinIdentifier() {
         return pinIdentifier;

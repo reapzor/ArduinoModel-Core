@@ -49,35 +49,36 @@ public class ArduinoModelTest {
 
     @After
     public void after() {
-        arduinoModel.removeAllListeners();
+        arduinoModel.getEventManager().removeAllListeners();
         arduinoModel.stop();
         reset();
     }
 
     @Test
     public void testDigitalOutputPinEventing() throws Exception {
-        DigitalOutputPin pin = arduinoModel.allocatePin(5, DigitalOutputPin.class);
+        DigitalOutputPin pin = arduinoModel.getResourceManager().allocatePin(5, DigitalOutputPin.class);
 
-        PinEventListener<DigitalWriteEvent> pinListener = PinEventListener.from(pinEvent -> {
+        PinEventListener<DigitalWriteEvent> pinListener = PinEventListener.from(5, pinEvent -> {
             assertNotNull(pinEvent.getCurrentValue());
             received();
         });
 
-        arduinoModel.addListener(pinListener);
+        arduinoModel.getEventManager().addListener(pinListener);
 
         pin.write(DigitalPinValue.HIGH);
         waitForCallback();
 
-        arduinoModel.removeListener(pinListener);
+        arduinoModel.getEventManager().removeListener(pinListener);
 
     }
 
     @Test
     public void testDigitalInputPinEventing() throws Exception {
-        DigitalInputPin pin = arduinoModel.allocatePin(5, DigitalInputPin.class);
-        //DigitalInputPin pin2 = arduinoModel.allocatePin(6, DigitalInputPin.class);
+        DigitalInputPin pin = arduinoModel.getResourceManager().allocatePin(5, DigitalInputPin.class);
+        DigitalInputPin pin2 = arduinoModel.getResourceManager().allocatePin(6, DigitalInputPin.class);
 
-        PinEventListener<DigitalValueEvent> pinListener = PinEventListener.from(pinEvent -> {
+        PinEventListener<DigitalValueEvent> pinListener = PinEventListener.from(5, pinEvent -> {
+            assertTrue(pinEvent.getPin().getPinIdentifier() == 5);
             assertNotNull(pinEvent.getCurrentValue());
             received();
         });
@@ -87,17 +88,17 @@ public class ArduinoModelTest {
             received();
         });
 
-        arduinoModel.addListener(pinListener);
-        arduinoModel.addListener(pullupListener);
+        arduinoModel.getEventManager().addListener(pinListener);
+        arduinoModel.getEventManager().addListener(pullupListener);
 
+        pin2.togglePinEventing(true);
         pin.togglePinEventing(true);
-        //pin2.togglePinEventing(true);
-        //pin2.togglePinEventing(false);
 
         waitForCallback();
+        pin2.togglePinEventing(false);
         pin.togglePinEventing(false);
 
-        arduinoModel.removeListener(pinListener);
+        arduinoModel.getEventManager().removeListener(pinListener);
 
         assertFalse(pin.pullupEnabled());
         pin.enablePullup(true);
@@ -107,14 +108,14 @@ public class ArduinoModelTest {
         waitForCallback();
         assertFalse(pin.pullupEnabled());
 
-        arduinoModel.removeListener(pullupListener);
+        arduinoModel.getEventManager().removeListener(pullupListener);
     }
 
     @Test
     public void testAnalogPinEventing() throws Exception {
-        AnalogPin pin = arduinoModel.allocatePin(17, AnalogPin.class);
+        AnalogPin pin = arduinoModel.getResourceManager().allocatePin(17, AnalogPin.class);
 
-        PinEventListener<AnalogValueEvent> pinListener = new PinEventListener<AnalogValueEvent>() {
+        PinEventListener<AnalogValueEvent> pinListener = new PinEventListener<AnalogValueEvent>(17) {
             @Override
             public void eventReceived(AnalogValueEvent pinEvent) {
                 assertTrue(pinEvent.getCurrentValueInt() >= 0);
@@ -123,7 +124,7 @@ public class ArduinoModelTest {
             }
         };
 
-        arduinoModel.addListener(pinListener);
+        arduinoModel.getEventManager().addListener(pinListener);
 
         arduinoModel.getFirmata().sendMessage(new ReportAnalogPinMessage(18, true));
         pin.togglePinEventing(true);
@@ -131,25 +132,25 @@ public class ArduinoModelTest {
         arduinoModel.getFirmata().sendMessage(new ReportAnalogPinMessage(18, false));
         pin.togglePinEventing(false);
 
-        arduinoModel.removeListener(pinListener);
+        arduinoModel.getEventManager().removeListener(pinListener);
     }
 
     @Test
     public void testLambdaListenerEventing() throws Exception {
-        AnalogPin pin = arduinoModel.allocatePin(17, AnalogPin.class);
+        AnalogPin pin = arduinoModel.getResourceManager().allocatePin(17, AnalogPin.class);
 
-        PinEventListener<AnalogValueEvent> pinListener = PinEventListener.from(pinEvent -> {
+        PinEventListener<AnalogValueEvent> pinListener = PinEventListener.from(17, pinEvent -> {
             assertTrue(pinEvent.getCurrentValueInt() >= 0);
             received();
         });
 
-        arduinoModel.addListener(pinListener);
+        arduinoModel.getEventManager().addListener(pinListener);
 
         pin.togglePinEventing(true);
         waitForCallback();
         pin.togglePinEventing(false);
 
-        arduinoModel.removeListener(pinListener);
+        arduinoModel.getEventManager().removeListener(pinListener);
     }
 
 }

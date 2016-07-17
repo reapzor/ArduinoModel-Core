@@ -7,6 +7,7 @@ import com.bortbort.arduino.Model.Core.MultiStatePin;
 import com.bortbort.arduino.Model.Core.PinEventManager;
 import com.bortbort.arduino.Model.Core.PinEvents.DigitalValueEvent;
 import com.bortbort.arduino.Model.Core.PinEvents.ReportDigitalEvent;
+import com.bortbort.arduino.Model.Core.PinResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
@@ -58,8 +59,10 @@ public class DigitalInputPin extends MultiStatePin {
         }
     });
 
-    public DigitalInputPin(Firmata firmata, PinEventManager eventManager, Integer pinIdentifier) {
-        super(firmata, eventManager, pinIdentifier, PinCapability.INPUT, PinCapability.INPUT, PinCapability.INPUT_PULLUP);
+    public DigitalInputPin(Firmata firmata, PinEventManager eventManager,
+                           PinResource pinResource, Integer pinIdentifier) {
+        super(firmata, eventManager, pinResource, pinIdentifier,
+                PinCapability.INPUT, PinCapability.INPUT, PinCapability.INPUT_PULLUP);
     }
 
     public void togglePinEventing(Boolean enable) {

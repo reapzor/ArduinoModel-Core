@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 /**
  * Created by chuck on 2/28/2016.
+ * Temporary class
  */
 public class AnalogPinMapper {
     private static final Logger log = LoggerFactory.getLogger(AnalogPinMapper.class);
@@ -20,6 +21,14 @@ public class AnalogPinMapper {
         }
 
         return digitalPinIdentifier - firstAnalogPinIdentifier;
+    }
+
+    public static Integer getDigitalPinIdentifier(Integer analogPinIdentifier) {
+        if (pinCapabilities == null) {
+            throw new RuntimeException("pinCapabilities must be populated first!");
+        }
+
+        return firstAnalogPinIdentifier + analogPinIdentifier;
     }
 
     static void setPinCapabilities(ArrayList<ArrayList<PinCapability>> pinCapabilities) {

@@ -7,6 +7,7 @@ import com.bortbort.arduino.FiloFirmata.PinCapability;
 import com.bortbort.arduino.Model.Core.Pin;
 import com.bortbort.arduino.Model.Core.PinEventManager;
 import com.bortbort.arduino.Model.Core.PinEvents.DigitalWriteEvent;
+import com.bortbort.arduino.Model.Core.PinResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +17,9 @@ import org.slf4j.LoggerFactory;
 public class DigitalOutputPin extends Pin {
     private static final Logger log = LoggerFactory.getLogger(DigitalOutputPin.class);
 
-    public DigitalOutputPin(Firmata firmata, PinEventManager eventManager, Integer pinIdentifier) {
-        super(firmata, eventManager, pinIdentifier, PinCapability.OUTPUT);
+    public DigitalOutputPin(Firmata firmata, PinEventManager eventManager,
+                            PinResource pinResource, Integer pinIdentifier) {
+        super(firmata, eventManager, pinResource, pinIdentifier, PinCapability.OUTPUT);
     }
 
     public Boolean write(Byte pinValue) {
