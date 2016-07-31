@@ -13,7 +13,6 @@ import java.util.concurrent.Executors;
 public class PinEventManager {
     private static final Logger log = LoggerFactory.getLogger(PinEventManager.class);
     private ExecutorService executor;
-    private ArrayList<PinEventListener> genericListeners = new ArrayList<>();
     private ArrayList<PinEventListener> pinEventListeners = new ArrayList<>();
 
     protected void start() {
@@ -32,25 +31,16 @@ public class PinEventManager {
     }
 
     public void addListener(PinEventListener listener) {
-        if (listener.getEventType().equals(PinEvent.class)) {
-            if (!genericListeners.contains(listener)) {
-                genericListeners.add(listener);
-            }
-            return;
-        }
-
         if (!pinEventListeners.contains(listener)) {
             pinEventListeners.add(listener);
         }
     }
 
     public void removeListener(PinEventListener listener) {
-        genericListeners.remove(listener);
         pinEventListeners.remove(listener);
     }
 
     public void removeAllListeners() {
-        genericListeners.clear();
         pinEventListeners.clear();
     }
 
@@ -61,18 +51,15 @@ public class PinEventManager {
             return;
         }
 
-        executor.submit(() -> {
+        executor.submit(() ->
             pinEventListeners.stream()
-                    .filter(aListener -> aListener.getPinIdentifier() == null ||
+                    .filter(aListener ->
+                            (aListener.getPinIdentifier() == null ||
                             aListener.getPinIdentifier().equals(pinEvent.getPinIdentifier()))
-                    .filter(pinListener -> pinListener.getEventType().equals(pinEvent.getClass()))
-                    .forEach(filteredListener -> filteredListener.eventReceived(pinEvent));
-
-            genericListeners.stream()
-                    .filter(aListener -> aListener.getPinIdentifier() == null ||
-                            aListener.getPinIdentifier().equals(pinEvent.getPinIdentifier()))
-                    .forEach(filteredListener -> filteredListener.eventReceived(pinEvent));
-        });
+                            && (aListener.getEventType().equals(pinEvent.getClass()) ||
+                            aListener.getEventType().equals(PinEvent.class))
+                    ).forEach(filteredListener -> filteredListener.eventReceived(pinEvent))
+        );
     }
 
 
